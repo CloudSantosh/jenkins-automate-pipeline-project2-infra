@@ -1,216 +1,516 @@
-# Infrastructure
+## ++++ JENKINS INSTALLATION ++++
 
-# Workspaces
+## Pre-Requisites
 
-A workspace is similar to a namespace: It has a dedicted name and an encapsualted state. In any Terraform project, the workspace that you start with is refered as the default workspace. The Terraform CLI than offers the following operations to manipulate workspaces:
-
-- workspace new: Creates a new workspace
-- workspace show: Shows the currently active workspace
-- workspace list: Shows all availabke workspaces
-- workspace select: Switch to a new workspace
-- workspace delete: Delete a workspace
-
-Workspaces should be used to provide multiple instances of a single configuration. This means that you want to reuse the very same manifests to create the vers samy resources, but provide a different configuration for these resources, for example to use a different image for a cloud server.
-
-# Modules
-
-Terraform modules provide coherent sets of parameterized resource descriptions. They are used to group related resource definitions to define architectural abstractions in your project, for example defining a control plane node with dedicated servers, VPC and databases.
-
-Modules can be defined locally or used from a private or public registry. They are fully self-contained, they need to explicitly define their providers, their variables, and the resources.
-
-## Example
-
-As before, to better understand modules, let’s use them in the very same example project. We will create two separate modules for the Jenkins-server, Kubernetes server, sonarqube server, keypair, security and vpc and define them in such a way that all required variables are to passed from root modules.
-
-### Create workspaces in the beginning
-
-    terraform workspace new dev
-    terraform workspace new prod
-    terraform workspace new stage
-
-<img src="https://github.com/CloudSantosh/terraform_practical/blob/master/day-6/images/3.png" width="600" height="100">
-
-### Create the modules directories and modules files.
-
-<img src="https://github.com/CloudSantosh/terraform_practical/blob/master/day-6/images/2.png" width="300" height="500">
-
-### In the provider.tf, we need to provide following configuration
+### Jenkins Server Details:
 
 ```
-terraform {
-  #required_version = ">= 1.4.4"
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 4.16"
-    }
-  }
+Operating System     : Ubuntu
+Hostname             : jenkins-ansible
+RAM                  : 2 GB
+CPU                  : 1 Core
+EC2 Instance         : t2.small
+```
+
+#### Update repository of ubuntu
+
+```
+sudo -i
+sudo apt-get update
+```
+
+### Change hostname
+
+```
+hostname
+hostnamectl set-hostname jenkins-ansible
+bash
+hostname
+```
+
+### Install Java
+
+```
+java -version
+apt-get install openjdk-11-jdk
+java -version
+```
+
+### Install Jenkins
+
+```
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | sudo tee \
+  /usr/share/keyrings/jenkins-keyring.asc > /dev/null
+
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install jenkins=2.361.3 -y
+```
+
+### Service start
+
+```
+systemctl start jenkins
+```
+
+### Service enable & check status
+
+```
+systemctl enable jenkins
+systemctl status jenkins
+```
+
+### Check 8080 port is used or not
+
+```
+netstat -plant | grep 8080
+```
+
+### Check version & Open jenkins on browser
+
+```
+jenkins --version
+
+URL:   http://<jenkins_server_ip>:8080
+```
+
+### Get Jenkins Administrator password using this command
+
+```
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+```
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+## ++++ ANSIBLE INSTALLATION ++++
+
+### Add Ansible repository
+
+```
+sudo apt-add-repository ppa:ansible/ansible
+```
+
+### Now fetch latest update & install Ansible
+
+```
+sudo apt update
+sudo apt-get install ansible -y
+```
+
+### Now check Ansible version
+
+```
+ansible --version
+```
+
+<br/>
+<br/>
+<br/>
+<br/>
+
+## ++++ MAVEN INSTALLATION ++++
+
+### Check version before install
+
+```
+mvn --version
+```
+
+### Change dir to /opt and download maven
+
+```
+cd /opt/
+ls
+wget https://dlcdn.apache.org/maven/maven-3/3.9.1/binaries/apache-maven-3.9.1-bin.zip
+apt-get install unzip -y
+unzip apache-maven-3.9.1-bin.zip
+ls
+rm -rf apache-maven-3.9.1-bin.zip
+ls
+```
+
+### Configure maven home path
+
+```
+vim ~/.bashrc
+
+## Add end of the file & save it.
+export M2_HOME=/opt/apache-maven-3.9.1
+export PATH=$PATH:$M2_HOME/bin
+
+source ~/.bashrc
+```
+
+### Check version again now
+
+```
+mvn --version
+mvn --help
+```
+
+## SONARQUBE INSTALLATION
+
+## Pre-Requisites
+
+### Jenkins Server Details:
+
+```
+Operating System     : Ubuntu
+Hostname             : sonarqube
+RAM                  : 2 GB
+CPU                  : 1 Core
+EC2 Instance         : t2.small
+```
+
+#### Update repository of ubuntu
+
+```
+## Download URL:  https://www.sonarsource.com/products/sonarqube/downloads/
+
+sudo -i
+sudo apt update
+```
+
+### Change time zone
+
+```
+date
+timedatectl
+sudo timedatectl set-timezone Asia/Kolkata
+timedatectl
+date
+```
+
+### Change time hostname
+
+```
+hostnamectl set-hostname sonarqube
+bash
+```
+
+### Install Java
+
+```
+java -version
+apt-get install openjdk-17-jdk -y       ## For sonarqube-10.0.0.68432.zip
+apt-get install openjdk-11-jdk -y       ## For sonarqube-8.9.2.46101.zip
+java -version
+```
+
+### Install Sonarqube
+
+```
+cd /opt/
+wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.0.0.68432.zip
+OR
+wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-8.9.2.46101.zip
+apt install unzip -y
+unzip sonarqube-10.0.0.68432.zip
+ls
+rm -rf sonarqube-10.0.0.68432.zip
+mv sonarqube-10.0.0.68432 sonarqube
+ls
+```
+
+### Create sonar user
+
+```
+useradd -d /opt/sonarqube sonar
+cat /etc/passwd | grep sonar
+ls -ld /opt/sonarqube
+chown -R sonar:sonar /opt/sonarqube
+ls -ld /opt/sonarqube
+```
+
+### Create custom service for sonar
+
+```
+cat >> /etc/systemd/system/sonarqube.service <<EOL
+[Unit]
+Description=SonarQube service
+After=syslog.target network.target
+
+[Service]
+Type=forking
+User=sonar
+Group=sonar
+PermissionsStartOnly=true
+ExecStart=/opt/sonarqube/bin/linux-x86-64/sonar.sh start
+ExecStop=/opt/sonarqube/bin/linux-x86-64/sonar.sh stop
+StandardOutput=syslog
+LimitNOFILE=65536
+LimitNPROC=4096
+TimeoutStartSec=5
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOL
+
+
+ls -l /etc/systemd/system/sonarqube.service
+```
+
+### Open port 9000 from firewalld OR security group
+
+```
+9000
+```
+
+### Service start
+
+```
+systemctl start sonarqube.service
+```
+
+### Service enable & check status
+
+```
+systemctl enable sonarqube.service
+systemctl status sonarqube.service
+```
+
+### Check 9000 port is used or not
+
+```
+apt install net-tools
+netstat -plant | grep 9000
+```
+
+### Open sonarqube on browser
+
+```
+URL:   http://<sonarqube_ip>:9000
+
+U: admin
+P: admin
+
+New Pass: admin@123
+```
+
+# KUBERNETES CLUSTER INSTALLATION
+
+## Pre-Requisites
+
+### Kubernetes Cluster Server Details:
+
+```
+Operating System     : Ubuntu
+Hostname             : k8-master
+RAM                  : 2 GB
+CPU                  : 2 Core
+EC2 Instance         : t3a.small
+```
+
+# ON MASTER NODE
+
+### Switch to root user & Update repository of ubuntu
+
+```
+sudo -i
+sudo apt update
+```
+
+### Start by disabling the swap memory
+
+```
+sudo swapoff -a
+sed -i 's/^\(.*swap.*\)$/#\1/' /etc/fstab
+```
+
+### Change time hostname
+
+```
+hostname
+sudo hostnamectl set-hostname k8-master
+bash
+hostname
+```
+
+### Change time zone
+
+```
+date
+timedatectl
+sudo timedatectl set-timezone Asia/Kolkata
+timedatectl
+date
+```
+
+### Install Docker with the command
+
+```
+sudo apt-get install -y \
+    apt-transport-https \
+    ca-certificates \
+    curl \
+    gnupg-agent \
+    software-properties-common
+```
+
+### Add Docker’s official GPG key
+
+```
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+```
+
+### Add Docker Repo
+
+```
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+```
+
+### Install the latest version of Docker Engine and containerd
+
+```
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+```
+
+### Check the installation (and version) by entering the following
+
+```
+docker --version
+```
+
+### The product_uuid can be checked by using the command
+
+```
+sudo cat /sys/class/dmi/id/product_uuid
+```
+
+### Set Docker to launch at boot by entering the following
+
+```
+sudo systemctl enable docker
+```
+
+### Verify Docker is running
+
+```
+sudo systemctl status docker
+```
+
+### Add Kubernetes Repo
+
+```
+{
+  curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+  echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
 }
+```
 
-provider "aws" {
-  region  = terraform.workspace=="dev"?var.region_dev:terraform.workspace=="prod"?var.region_prod:var.region_stage
-  profile = terraform.workspace
-}
+### Install kubeadm kubelet kubectl
+
+```
+apt update && apt-get install -y kubelet=1.21* kubeadm=1.21* kubectl=1.21*                 ## For 1.21 version
+sudo apt-mark hold kubelet kubeadm kubectl
+```
+
+### Verify the installation with kubeadm
+
+```
+kubeadm version
+kubectl version --short
+```
+
+### Initialize Kubernetes on Master Node
+
+```
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+```
+
+### Enter the following to create a directory for the cluster: To start using your cluster, you need to run the following as a regular user
+
+```
+sudo mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+### Now check to see if the kubectl command is activated
+
+```
+kubectl get nodes
+
+NAME          STATUS   ROLES    AGE    VERSION
+master-node   NOtReady    master   8m3s   v1.18.5
+```
+
+### Deploy Pod Network to Cluster
+
+```
+sudo kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+```
+
+### Verify that everything is running and communicating
+
+```
+kubectl get pod --all-namespaces
+```
+
+### Cross check your cluster is running status
+
+```
+kubectl get nodes
+```
+
+### Remove taint from k8-master node
+
+```
+kubectl taint nodes k8-master node-role.kubernetes.io/control-plane:NoSchedule-            ## v1.27.1
+OR
+kubectl taint nodes k8-master node-role.kubernetes.io/master:NoSchedule-                   ## v1.21.14
 
 ```
 
-### In the ~/.aws/credentials, we need to create profiles of every environment to allow communication aws console via aws-cli in the following way.
+</br>
+
+# KUBERNETES CLUSTER TESTING
+
+### Check pod status
 
 ```
-[dev]
-aws_access_key_id= <xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx>
-aws_secret_access_key= <xxxxxxxxxxxxxxxxxxxxxxxxxxxxx>
-
-[prod]
-aws_access_key_id= <xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx>
-aws_secret_access_key= <xxxxxxxxxxxxxxxxxxxxxxxxxxxxx>
-
-[stage]
-aws_access_key_id= <xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx>
-aws_secret_access_key= <xxxxxxxxxxxxxxxxxxxxxxxxxxxxx>
-
+kubectl get pod
 ```
 
-### In the terraform.tfvars, we need to provide values for the variables for root modules main.tf
+### Create testing.yml and insert below content
+
+vim testing.yaml
 
 ```
-# Development Workspace  variables and its default values
-region_dev                = "us-east-1"
-vpc_cidr_dev              = "192.168.0.0/16"
-public_subnet_az_cidr_dev = "192.168.0.0/24"
-keypair_name_dev          = "dev-keypair"
-
-# Production Workspace variables and its default values
-region_prod                = "us-east-2"
-vpc_cidr_prod              = "192.162.0.0/16"
-public_subnet_az_cidr_prod = "192.162.0.0/24"
-keypair_name_prod          = "prod-keypair"
-
-# Staging Workspace  variables and its default values
-region_stage                = "us-west-1"
-vpc_cidr_stage              = "192.100.0.0/16"
-public_subnet_az_cidr_stage = "192.100.0.0/24"
-keypair_name_stage          = "stage-keypair"
-
-
-# Common varibales used in all workspaces and its default values
-instance_type      = "t2.medium"
-project_name       = "devOps"
-keypair_algorithm  = "RSA"
-rsa_bit            = 4096
-
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testing
+spec:
+  containers:
+  - name: testing
+    image: nginx
 ```
 
-### variable.tf for the main.tf root modules
+### Check pod status
 
 ```
-# Development Workspace  variables
-variable "region_dev" {}
-variable "vpc_cidr_dev" {}
-variable "public_subnet_az_cidr_dev" {}
-variable "keypair_name_dev" {}
-
-# Production Workspace variables
-variable "region_prod" {}
-variable "vpc_cidr_prod" {}
-variable "public_subnet_az_cidr_prod" {}
-variable "keypair_name_prod" {}
-
-# Staging Workspace  variables
-variable "region_stage" {}
-variable "vpc_cidr_stage" {}
-variable "public_subnet_az_cidr_stage" {}
-variable "keypair_name_stage" {}
-
-# Common varibales used in all workspaces
-variable "instance_type" {}
-variable "project_name" {}
-variable "keypair_algorithm" {}
-variable "rsa_bit" {}
-
-
+kubectl apply -f testing.yaml
 ```
 
-### In the main.tf in root modules, we define in the following way.
+### Check pod status
 
 ```
-
-#-------------------
-# create VPC
-#-------------------
-module "vpc" {
-  source                = "../modules/vpc"
-  region                = terraform.workspace=="dev"?var.region_dev:terraform.workspace=="prod"?var.region_prod:var.region_stage
-  project_name          = var.project_name
-  vpc_cidr              = terraform.workspace=="dev"?var.vpc_cidr_dev:terraform.workspace=="prod"?var.vpc_cidr_prod:var.vpc_cidr_stage
-  public_subnet_az_cidr = terraform.workspace=="dev"?var.public_subnet_az_cidr_dev:terraform.workspace=="prod"?var.public_subnet_az_cidr_prod:var.public_subnet_az_cidr_stage
-}
-
-#-------------------
-# create security
-#-------------------
-module "security" {
-  source       = "../modules/security"
-  project_name = var.project_name
-  vpc_id       = module.vpc.vpc_id
-
-}
-
-#-------------------
-# create keypair
-#-------------------
-module "keypair" {
-  source            = "../modules/keypair"
-  keypair_algorithm = var.keypair_algorithm
-  rsa_bit           = var.rsa_bit
-  keypair_name      = terraform.workspace=="dev"?var.keypair_name_dev:terraform.workspace=="prod"?var.keypair_name_prod:var.keypair_name_stage
-}
-#-------------------
-# create jenkins-server
-#-------------------
-module "jenkins-server" {
-  source              = "../modules/jenkins-server"
-  instance_type       = var.instance_type
-  keypair_name        = terraform.workspace=="dev"?var.keypair_name_dev:terraform.workspace=="prod"?var.keypair_name_prod:var.keypair_name_stage
-  public_subnet_az_id = module.vpc.public_subnet_az_id
-  project_name        = var.project_name
-  jenkins_server_security_group_id = [module.security.security_group_port_8080_id, module.security.security_group_port_22_id]
-}
-#-------------------
-# create Sonarqube-server
-#-------------------
-module "sonarqube-server" {
-  source                = "../modules/sonarqube-server"
-  instance_type         = var.instance_type
-  keypair_name          = terraform.workspace=="dev"?var.keypair_name_dev:terraform.workspace=="prod"?var.keypair_name_prod:var.keypair_name_stage
-  public_subnet_az_id   = module.vpc.public_subnet_az_id
-  project_name          = var.project_name
-  sonarqube_server_security_group_id = [module.security.security_group_port_9000_id, module.security.security_group_port_22_id]
-}
-#-------------------
-# create Kubernetes-server
-#-------------------
-module "k8-server" {
-  source                 = "../modules/k8-server"
-  instance_type          = var.instance_type
-  keypair_name           = terraform.workspace=="dev"?var.keypair_name_dev:terraform.workspace=="prod"?var.keypair_name_prod:var.keypair_name_stage
-  public_subnet_az_id    = module.vpc.public_subnet_az_id
-  project_name           = var.project_name
-  k8_server_security_group_id = [module.security.security_group_port_30000_id, module.security.security_group_port_22_id]
-}
+kubectl get pod
 ```
 
-When terraform validate reports no errors, you then need to run init again so that Terraform will configure the modules. Then, we can plan and apply the changes but before that we need to select the workspace before plan and apply the changes. The code for modules and root modules are same but when select the the workspaces running following command,
+### After check delete the pod
 
 ```
-    terraform workspace select <workspace_name>
-    i.e. in our example, we have prod, dev and stage as workspace_name
+kubectl delete -f testing.yaml
 ```
-
-## Conclusion
-
-We learned about Terraform workspaces and modules, two methods that help to work with more complex projects. Following an example for creating cloud computing server in the AWS cloud, you saw both methods applied. In essence, workspaces provide namespaces for resource creation with dedicated states.
-
-<img src="https://github.com/CloudSantosh/terraform_practical/blob/master/day-6/images/1.png" width="300" height="100">
-
-Use them when you want to manage basically the same resource, but with different configuration, such as in a staging, production and development environment. Modules are fully self-contained, grouped resource definitions that represent parts of a complex infrastructure. Use them to separate your projects into logically related parts, such as a module for creating the resources in the environment, one for its nodes, and others. To better understand how workspaces and modules are used, this project also showed an example for seperating development, production and staging resources.

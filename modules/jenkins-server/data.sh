@@ -28,8 +28,3 @@ sudo wget https://dlcdn.apache.org/maven/maven-3/3.9.4/binaries/apache-maven-3.9
 sudo apt-get install unzip -y
 sudo unzip apache-maven-3.9.4-bin.zip
 sudo rm -rf apache-maven-3.9.4-bin.zip
-
-export M2_HOME=/opt/apache-maven-3.9.4
-export PATH=$PATH:$M2_HOME/bin
-sleep 5
-source ~/.bashrc

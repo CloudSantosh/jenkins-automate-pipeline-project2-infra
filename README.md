@@ -308,7 +308,7 @@ CPU                  : 2 Core
 EC2 Instance         : t3a.small
 ```
 
-# ON MASTER NODE
+## ON MASTER NODE
 
 ### Switch to root user & Update repository of ubuntu
 

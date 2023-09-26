@@ -179,16 +179,6 @@ sudo -i
 sudo apt update
 ```
 
-### Change time zone
-
-```
-date
-timedatectl
-sudo timedatectl set-timezone Asia/Kolkata
-timedatectl
-date
-```
-
 ### Change time hostname
 
 ```
@@ -335,16 +325,6 @@ hostname
 sudo hostnamectl set-hostname k8-master
 bash
 hostname
-```
-
-### Change time zone
-
-```
-date
-timedatectl
-sudo timedatectl set-timezone Asia/Kolkata
-timedatectl
-date
 ```
 
 ### Install Docker with the command
